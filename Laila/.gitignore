@@ -1,0 +1,16 @@
+# Artefatos de compilação do Rust
+/target/
+**/*.rs.bk
+
+# Bloqueio de dependências (opcional se quiser ignorar)
+# Cargo.lock
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

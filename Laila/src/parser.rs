@@ -576,7 +576,7 @@ impl<'src> Parser<'src> {
         let mut left = self.parse_expr_e()?;
 
         while self.check(TokenKind::Ou) {
-            let op_tok = self.next();
+            let _ = self.next();
             let right = self.parse_expr_e()?;
             let span = Span {
                 start: left.span().start,
@@ -598,7 +598,7 @@ impl<'src> Parser<'src> {
         let mut left = self.parse_expr_relacional()?;
 
         while self.check(TokenKind::E) {
-            let op_tok = self.next();
+            let _ = self.next();
             let right = self.parse_expr_relacional()?;
             let span = Span {
                 start: left.span().start,
@@ -884,7 +884,8 @@ pub fn parse<'src>(tokens: &'src [Token<'src>]) -> Result<Program<'src>, ParseEr
 pub fn parse_source(source: &str) -> Result<Program<'_>, String> {
     let tokens = crate::tokenize(source).map_err(|e| format!("{e}"))?;
     // Como os tokens pegam referências ao source, precisamos mantê-los no mesmo tempo de vida:
-    let leaked_tokens: &'static [Token<'static>] = Box::leak(tokens.into_boxed_slice());
+    // (o vetor é "vazado" para viver tanto quanto `source`; Token<'_> continua presa ao source)
+    let leaked_tokens: &[Token<'_>] = Box::leak(tokens.into_boxed_slice());
     parse(leaked_tokens).map_err(|e| format!("{e}"))
 }
 
@@ -896,7 +897,7 @@ mod tests {
 
     fn parse_str(src: &str) -> Result<Program<'_>, ParseError> {
         let tokens = tokenize(src).expect("falha ao tokenizar entrada no teste");
-        let leaked: &'static [Token<'static>] = Box::leak(tokens.into_boxed_slice());
+        let leaked: &[Token<'_>] = Box::leak(tokens.into_boxed_slice());
         parse(leaked)
     }
 

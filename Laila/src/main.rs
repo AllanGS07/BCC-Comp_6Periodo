@@ -1,6 +1,6 @@
 use laila_lexer::{
     number::{LiteralPrecision, NumCompiler},
-    parse, tokenize, Parser, TokenKind,
+    tokenize, Parser, TokenKind,
 };
 use std::env;
 use std::fs;
