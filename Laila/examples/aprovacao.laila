@@ -1,0 +1,8 @@
+vazio principal() {
+    dec nota_final = 8,50;
+    se (nota_final >= 7,00) {
+        imprima("Aprovado");
+    } senao {
+        imprima("Reprovado");
+    }
+}

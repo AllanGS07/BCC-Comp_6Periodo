@@ -1,0 +1,16 @@
+[package]
+name = "laila_lexer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Allan Gonçalves Santana"]
+description = "Compilador educacional da linguagem Laila (Analisador Léxico e Sintático)"
+
+[[bin]]
+name = "laila"
+path = "src/main.rs"
+
+[lib]
+name = "laila_lexer"
+path = "src/lib.rs"
+
+[dependencies]
