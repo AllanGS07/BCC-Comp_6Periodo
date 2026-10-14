@@ -1,0 +1,10 @@
+vazio principal() {
+    num idade = 21;
+    num preco = 19,90;
+    num pi_preciso = 3,141592653589793;
+    num populacao = 1.000.000;
+    num saldo = 1.500,75;
+
+    imprima(idade, preco, pi_preciso, populacao, saldo);
+}
+

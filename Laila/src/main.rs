@@ -1,6 +1,6 @@
 use laila_lexer::{
     number::{LiteralPrecision, NumCompiler},
-    tokenize, Parser, TokenKind,
+    tokenize, CstParser, Parser, TokenKind,
 };
 use std::env;
 use std::fs;
@@ -12,7 +12,8 @@ const HELP: &str = "Uso: laila [opções] [arquivo|-]
 Opções:
   --tokens        Executa apenas o analisador léxico e imprime os tokens.
   --lower-num     Mostra tipo, bytes e literal C de cada constante numérica.
-  --ast           Executa o analisador sintático e imprime a árvore sintática detalhada.
+  --ast           Executa o analisador sintático e imprime a árvore sintática abstrata (AST).
+  --arvore, --cst Executa e imprime a árvore de derivação completa (CST), com todos os terminais (=, ;, etc.).
   -h, --help      Mostra esta mensagem de ajuda.
 
 Sem opções específicas de saída, executa o analisador sintático e confirma
@@ -23,6 +24,7 @@ Exemplos:
   laila examples/aprovacao.laila
   laila --tokens examples/aprovacao.laila
   laila --ast examples/aprovacao.laila
+  laila --arvore examples/aprovacao.laila
   laila --lower-num examples/numeros.laila
 ";
 
@@ -30,6 +32,7 @@ Exemplos:
 enum Mode {
     ParseAndValidate,
     PrintAst,
+    PrintCst,
     TokensOnly,
     LowerNum,
 }
@@ -55,6 +58,10 @@ fn run() -> Result<(), String> {
             }
             if arg == "--ast" {
                 mode = Mode::PrintAst;
+                continue;
+            }
+            if arg == "--arvore" || arg == "--cst" {
+                mode = Mode::PrintCst;
                 continue;
             }
             if arg == "--lower-num" {
@@ -134,6 +141,11 @@ fn run() -> Result<(), String> {
             let mut parser = Parser::new(&tokens);
             let program = parser.parse_program().map_err(|e| format!("{label}:{e}"))?;
             println!("{program:#?}");
+        }
+        Mode::PrintCst => {
+            let mut parser = CstParser::new(&tokens);
+            let cst = parser.parse_program().map_err(|e| format!("{label}:{e}"))?;
+            print_output(&cst.format_tree())?;
         }
         Mode::ParseAndValidate => {
             let mut parser = Parser::new(&tokens);

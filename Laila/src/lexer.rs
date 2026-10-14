@@ -111,6 +111,28 @@ impl<'src> Lexer<'src> {
         self.peek() == Some(',') && self.peek_second().is_some_and(|c| c.is_ascii_digit())
     }
 
+    fn thousand_dot(&self) -> bool {
+        if self.peek() != Some('.') {
+            return false;
+        }
+        let rest = &self.source[self.position.byte + 1..];
+        let mut chars = rest.chars();
+        let d1 = chars.next();
+        let d2 = chars.next();
+        let d3 = chars.next();
+        if !d1.is_some_and(|c| c.is_ascii_digit())
+            || !d2.is_some_and(|c| c.is_ascii_digit())
+            || !d3.is_some_and(|c| c.is_ascii_digit())
+        {
+            return false;
+        }
+        let d4 = chars.next();
+        if d4.is_some_and(|c| c.is_ascii_digit()) {
+            return false;
+        }
+        true
+    }
+
     fn identifier_tail(&mut self) {
         while self.peek().is_some_and(is_identifier_continue) {
             self.advance();
@@ -119,6 +141,13 @@ impl<'src> Lexer<'src> {
 
     fn number(&mut self) -> Result<TokenKind, LexErrorKind> {
         self.digits();
+        while self.thousand_dot() {
+            self.advance();
+            self.advance();
+            self.advance();
+            self.advance();
+        }
+
         let kind = if self.decimal_comma() {
             self.advance();
             self.digits();

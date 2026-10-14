@@ -57,7 +57,33 @@ Ao analisar o PDF da Gramática Representativa em conjunto com o vocabulário of
 
 ---
 
-## 3. Como Executar
+## 3. Árvore de Derivação Completa (CST / Parse Tree) vs. AST
+
+A linguagem oferece duas visualizações da estrutura sintática:
+1. **Árvore de Derivação Completa (CST / Parse Tree - `--arvore` ou `--cst`):**
+   - Preserva **rigorosamente todos os elementos da gramática**, incluindo pontuações (`=`, `;`, `,`), delimitadores (`(`, `)`, `{`, `}`) e palavras-chave.
+   - Ideal para apresentação na disciplina de Compiladores e verificação formal do processo de derivação gramatical.
+2. **Árvore Sintática Abstrata (AST - `--ast`):**
+   - Representação enxuta voltada para geração de código e análise semântica.
+
+---
+
+## 4. O Tipo Numérico Unificado `num` e Notação Numérica Brasileira
+
+Para simplificar a tipagem e otimizar memória RAM, a linguagem Laila implementa o tipo unificado `num`:
+- **Economia Dinâmica de Memória RAM:** O compilador infere o tipo C de menor consumo de memória necessário:
+  - **Inteiros sem vírgula (`int` - 4 bytes):** Ex.: `idade = 21;`, `populacao = 1.000.000;`.
+  - **Inteiros longos sem vírgula (`long long` - 8 bytes):** Ex.: inteiros maiores que $2^{31}-1$.
+  - **Decimais simples com vírgula (`float` - 4 bytes):** Ex.: `nota = 8,50;`, economizando 4 bytes de RAM comparado ao `double`.
+  - **Decimais de dupla precisão (`double` - 8 bytes):** Ex.: `pi = 3,141592653589793;`.
+- **Notação em Português do Brasil (PT-BR):**
+  - **Vírgula (`,`) para decimais:** Ex.: `8,50`, `3,14`.
+  - **Ponto (`.`) para separador de milhares/unidades:** Ex.: `1.000`, `1.000.000`, `1.500,75`.
+  - O uso inadvertido de ponto como separador decimal (ex.: `3.14`) é rejeitado com mensagem de erro educativa orientando o uso da vírgula.
+
+---
+
+## 5. Como Executar
 
 ### Compilação e Testes
 ```bash
@@ -70,8 +96,16 @@ cargo test
 # Validar sintaxe
 cargo run -- examples/aprovacao.laila
 
+# Imprimir árvore de derivação completa (CST - inclui '=', ';', chaves, parênteses)
+cargo run -- --arvore examples/aprovacao.laila
+# ou
+cargo run -- --cst examples/aprovacao.laila
+
 # Imprimir árvore sintática abstrata (AST)
 cargo run -- --ast examples/aprovacao.laila
+
+# Inspecionar tipos C, bytes de RAM e literais de num
+cargo run -- --lower-num examples/numeros.laila
 
 # Apenas análise léxica (tokens)
 cargo run -- --tokens examples/aprovacao.laila

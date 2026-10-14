@@ -43,8 +43,16 @@ impl<'src> Parser<'src> {
             kind: TokenKind::Eof,
             lexeme: "",
             span: Span {
-                start: Position { byte: 0, line: 1, column: 1 },
-                end: Position { byte: 0, line: 1, column: 1 },
+                start: Position {
+                    byte: 0,
+                    line: 1,
+                    column: 1,
+                },
+                end: Position {
+                    byte: 0,
+                    line: 1,
+                    column: 1,
+                },
             },
         });
 
@@ -161,7 +169,10 @@ impl<'src> Parser<'src> {
 
         Ok(Program {
             items,
-            span: Span { start: start_pos, end: end_pos },
+            span: Span {
+                start: start_pos,
+                end: end_pos,
+            },
         })
     }
 
@@ -170,7 +181,11 @@ impl<'src> Parser<'src> {
         let k0 = self.lookahead().kind;
         let is_ret_type = matches!(
             k0,
-            TokenKind::TipoVazio | TokenKind::TipoInt | TokenKind::TipoDec | TokenKind::TipoCarac | TokenKind::TipoNum
+            TokenKind::TipoVazio
+                | TokenKind::TipoInt
+                | TokenKind::TipoDec
+                | TokenKind::TipoCarac
+                | TokenKind::TipoNum
         );
         is_ret_type
             && self.peek_ahead(1).kind == TokenKind::Id
@@ -466,12 +481,18 @@ impl<'src> Parser<'src> {
             } else {
                 None
             };
-            let var_end = init_expr.as_ref().map(|e| e.span().end).unwrap_or(id_tok.span.end);
+            let var_end = init_expr
+                .as_ref()
+                .map(|e| e.span().end)
+                .unwrap_or(id_tok.span.end);
             Some(ForInit::VarDecl(VarDecl {
                 var_type,
                 name: id_tok.lexeme,
                 init: init_expr,
-                span: Span { start: var_start, end: var_end },
+                span: Span {
+                    start: var_start,
+                    end: var_end,
+                },
             }))
         } else {
             None
@@ -822,7 +843,10 @@ impl<'src> Parser<'src> {
         self.parse_chamada_restante(id_tok)
     }
 
-    fn parse_chamada_restante(&mut self, id_tok: Token<'src>) -> Result<FunctionCall<'src>, ParseError> {
+    fn parse_chamada_restante(
+        &mut self,
+        id_tok: Token<'src>,
+    ) -> Result<FunctionCall<'src>, ParseError> {
         let start = id_tok.span.start;
         self.match_token(TokenKind::AbrePar)?;
 
@@ -888,7 +912,6 @@ pub fn parse_source(source: &str) -> Result<Program<'_>, String> {
     let leaked_tokens: &[Token<'_>] = Box::leak(tokens.into_boxed_slice());
     parse(leaked_tokens).map_err(|e| format!("{e}"))
 }
-
 
 #[cfg(test)]
 mod tests {
