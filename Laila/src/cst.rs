@@ -412,9 +412,7 @@ impl<'src> CstParser<'src> {
         let start = self.lookahead().span.start;
         let mut children = Vec::new();
 
-        children.push(CstNode::Terminal(
-            self.match_token(TokenKind::AbreChaves)?,
-        ));
+        children.push(CstNode::Terminal(self.match_token(TokenKind::AbreChaves)?));
         children.push(self.parse_comandos()?);
         let fecha = self.match_token(TokenKind::FechaChaves)?;
         let end = fecha.span.end;
@@ -496,9 +494,7 @@ impl<'src> CstParser<'src> {
                 if self.peek_ahead(1).kind == TokenKind::AbrePar {
                     let mut call_children = Vec::new();
                     call_children.push(self.parse_chamada_funcao()?);
-                    call_children.push(CstNode::Terminal(
-                        self.match_token(TokenKind::PontoVirg)?,
-                    ));
+                    call_children.push(CstNode::Terminal(self.match_token(TokenKind::PontoVirg)?));
                     let end = call_children.last().unwrap().span().end;
                     CstNode::NonTerminal {
                         name: "CHAMADA_COMANDO",
@@ -689,9 +685,7 @@ impl<'src> CstParser<'src> {
         } else {
             children.push(CstNode::Epsilon);
         }
-        children.push(CstNode::Terminal(
-            self.match_token(TokenKind::PontoVirg)?,
-        ));
+        children.push(CstNode::Terminal(self.match_token(TokenKind::PontoVirg)?));
 
         // Condição
         if !self.check(TokenKind::PontoVirg) {
@@ -699,9 +693,7 @@ impl<'src> CstParser<'src> {
         } else {
             children.push(CstNode::Epsilon);
         }
-        children.push(CstNode::Terminal(
-            self.match_token(TokenKind::PontoVirg)?,
-        ));
+        children.push(CstNode::Terminal(self.match_token(TokenKind::PontoVirg)?));
 
         // Incremento
         if self.check(TokenKind::Id) {
