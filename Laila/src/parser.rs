@@ -63,10 +63,6 @@ impl<'src> Parser<'src> {
         }
     }
 
-    // =========================================================================
-    // Operações Básicas do Analisador Sintático (conforme o modelo de aula)
-    // =========================================================================
-
     /// 1. OLHAR (lookahead): Retorna o token atual, sem consumi-lo.
     #[inline]
     pub fn lookahead(&self) -> &Token<'src> {
@@ -131,10 +127,6 @@ impl<'src> Parser<'src> {
             &self.default_eof
         }
     }
-
-    // =========================================================================
-    // Regras Gramaticais
-    // =========================================================================
 
     /// PROGRAMA → (FUNCAO | COMANDO)+ TK_EOF
     /// Suporta múltiplos programas completos, coleções de funções e scripts com comandos.
