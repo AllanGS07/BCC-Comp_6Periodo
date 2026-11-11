@@ -96,8 +96,29 @@ impl<'src> Lexer<'src> {
     }
 
     fn skip_whitespace(&mut self) {
-        while self.peek().is_some_and(char::is_whitespace) {
-            self.advance();
+        loop {
+            while self.peek().is_some_and(char::is_whitespace) {
+                self.advance();
+            }
+            if self.peek() == Some('/') && self.peek_second() == Some('/') {
+                while let Some(c) = self.peek() {
+                    self.advance();
+                    if c == '\n' {
+                        break;
+                    }
+                }
+            } else if self.peek() == Some('/') && self.peek_second() == Some('*') {
+                self.advance();
+                self.advance();
+                while let Some(c) = self.advance() {
+                    if c == '*' && self.peek() == Some('/') {
+                        self.advance();
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
         }
     }
 

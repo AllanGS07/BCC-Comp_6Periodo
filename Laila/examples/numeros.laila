@@ -7,4 +7,3 @@ vazio principal() {
 
     imprima(idade, preco, pi_preciso, populacao, saldo);
 }
-

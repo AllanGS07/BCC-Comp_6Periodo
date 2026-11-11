@@ -1,0 +1,4 @@
+vazio principal() {
+    // Erro léxico: em Laila, casas decimais usam vírgula (ex.: 3,14) e não ponto
+    dec pi = 3.14;
+}

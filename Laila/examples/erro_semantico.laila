@@ -1,0 +1,22 @@
+int soma(int a, int b) {
+    retorna a + b;
+}
+
+vazio principal() {
+    // 1. Erro semântico de tipo: variável 'int' recebendo literal 'dec'
+    int idade = 8,50;
+
+    // 2. Erro semântico de redeclaração no mesmo escopo (B2)
+    int idade = 20;
+
+    // 3. Erro semântico de variável não declarada
+    taxa = 40;
+
+    // 4. Erro semântico de condição não booleana no 'se'
+    se (idade + 10) {
+        imprima(idade);
+    }
+
+    // 5. Erro semântico de aridade na chamada de função
+    int resultado = soma(10);
+}
