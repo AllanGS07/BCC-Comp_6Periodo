@@ -1,13 +1,13 @@
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Position {
     pub byte: usize,
     pub line: usize,
     pub column: usize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Span {
     pub start: Position,
     pub end: Position,
@@ -113,6 +113,37 @@ impl TokenKind {
 
     pub const fn is_numeric_type(self) -> bool {
         matches!(self, Self::TipoNum | Self::TipoInt | Self::TipoDec)
+    }
+
+    pub const fn description(self) -> &'static str {
+        match self {
+            Self::TipoInt => "int",
+            Self::TipoDec => "dec",
+            Self::TipoCarac => "carac",
+            Self::TipoNum => "num",
+            Self::TipoVazio => "vazio",
+            Self::Se => "se",
+            Self::Senao => "senao",
+            Self::Enquanto => "enquanto",
+            Self::Para => "para",
+            Self::Pare => "pare",
+            Self::Continue => "continue",
+            Self::Retorna => "retorna",
+            Self::Imprima => "imprima",
+            Self::Leia => "leia",
+            Self::Id => "identificador",
+            Self::NumInt => "número inteiro",
+            Self::NumDec => "número decimal",
+            Self::Atrib => "=",
+            Self::PontoVirg => ";",
+            Self::Virgula => ",",
+            Self::AbrePar => "(",
+            Self::FechaPar => ")",
+            Self::AbreChaves => "{",
+            Self::FechaChaves => "}",
+            Self::Eof => "fim de arquivo (EOF)",
+            _ => self.name(),
+        }
     }
 
     pub(crate) fn keyword(word: &str) -> Option<Self> {

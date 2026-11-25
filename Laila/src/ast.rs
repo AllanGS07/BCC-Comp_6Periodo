@@ -11,7 +11,7 @@ pub struct Program<'src> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProgramItem<'src> {
     Function(Function<'src>),
-    Statement(Statement<'src>),
+    Statement(Box<Statement<'src>>),
 }
 
 /// Representa uma função na linguagem Laila.
@@ -87,7 +87,7 @@ pub enum Statement<'src> {
     Assignment(Assignment<'src>),
     If(IfStmt<'src>),
     While(WhileStmt<'src>),
-    For(ForStmt<'src>),
+    For(Box<ForStmt<'src>>),
     Print(PrintStmt<'src>),
     Read(ReadStmt<'src>),
     Return(ReturnStmt<'src>),

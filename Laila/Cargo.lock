@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "laila_lexer"
-version = "0.1.0"
+name = "laila"
+version = "1.0.0"

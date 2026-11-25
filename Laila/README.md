@@ -1,46 +1,35 @@
-# Compilador Laila — Front-End Completo (Léxico, Sintático, Semântico e Tabela de Símbolos)
+# Compilador Laila
 
-## 1. Executar todos os testes automatizados (38 testes)
+Compilador completo em Rust para a linguagem **Laila** (sintaxe em português, vírgula decimal, tipo numérico automático `num` e tipos estáticos `int`, `dec`, `carac`, `vazio`), com **RI (TAC)**, **Otimizador**, **Interpretador da RI** e **Gerador de Código C11** via **GCC**.
+
+## Testes
 
 ```powershell
 cargo test
 ```
 
-## 2. Executar o Front-End Completo (Léxico + Sintático + Semântico + Tabela de Símbolos)
+## Uso no terminal
 
 ```powershell
-# Validação direta
+# Validar programa (léxico + sintático + semântico)
 cargo run -- examples/aprovacao.laila
-cargo run -- examples/funcoes.laila
-cargo run -- examples/escopos.laila
-cargo run -- examples/numeros.laila
 
-# Exibição completa de todas as etapas (Tokens + Árvore CST + Tabela de Símbolos + Veredito)
-cargo run -- --completo examples/aprovacao.laila
-```
-
-## 3. Exibir a Tabela de Símbolos (Escopos B0, B1, B2... e Resolução de Referências)
-
-```powershell
+# Inspecionar cada fase
+cargo run -- --tokens examples/aprovacao.laila
 cargo run -- --simbolos examples/escopos.laila
-cargo run -- --simbolos examples/aprovacao.laila
-cargo run -- --simbolos examples/funcoes.laila
+cargo run -- --ri examples/otimizacao.laila
+cargo run -- --c examples/fatorial.laila
+
+# Executar ou compilar
+cargo run -- --interpretar examples/fatorial.laila
+cargo run -- --executar examples/fatorial.laila
+cargo run -- --compilar examples/aprovacao.laila -o aprovacao.exe
 ```
 
-## 4. Testar Detecção de Erros (Léxicos, Sintáticos e Semânticos)
+## Exemplos de erro
 
 ```powershell
 cargo run -- examples/erro_lexico.laila
 cargo run -- examples/erro_sintatico.laila
 cargo run -- examples/erro_semantico.laila
 ```
-
-## 5. Exibir apenas Tokens ou Árvore de Derivação (CST)
-
-```powershell
-cargo run -- --tokens examples/aprovacao.laila
-cargo run -- --arvore examples/aprovacao.laila
-cargo run -- --lower-num examples/numeros.laila
-```
-
-

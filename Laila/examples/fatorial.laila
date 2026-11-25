@@ -1,0 +1,19 @@
+int fatorial(int n) {
+    se (n <= 1) {
+        retorna 1;
+    }
+    retorna n * fatorial(n - 1);
+}
+
+vazio principal() {
+    num limite = 5;
+    num soma = 0,0;
+
+    para (int i = 1; i <= 5; i = i + 1) {
+        int fat = fatorial(i);
+        imprima(i, fat);
+    }
+
+    soma = soma + 12,50;
+    imprima(limite, soma);
+}

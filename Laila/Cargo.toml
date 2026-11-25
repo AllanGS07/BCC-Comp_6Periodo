@@ -1,16 +1,16 @@
 [package]
-name = "laila_lexer"
-version = "0.1.0"
-edition = "2021"
+name = "laila"
+version = "1.0.0"
+edition = "2024"
 authors = ["Allan Gonçalves Santana"]
-description = "Compilador educacional da linguagem Laila (Analisador Léxico e Sintático)"
+description = "Compilador completo da linguagem educacional Laila (Front-End e Back-End para C)"
 
 [[bin]]
 name = "laila"
 path = "src/main.rs"
 
 [lib]
-name = "laila_lexer"
+name = "laila"
 path = "src/lib.rs"
 
 [dependencies]

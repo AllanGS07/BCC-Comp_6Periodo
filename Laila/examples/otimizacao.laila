@@ -1,0 +1,16 @@
+vazio principal() {
+    // Expressões constantes e simplificação algébrica para demonstração da RI otimizada
+    int base = 2 + 3 * 4;
+    int resultado = base + 0;
+    int inutil = 100 * 2;
+
+    // `num` automático: inicia inteiro e promove automaticamente para decimal (float)
+    num taxa = 10;
+    taxa = 3,50;
+
+    se (verdadeiro) {
+        imprima(resultado, taxa);
+    } senao {
+        imprima(999);
+    }
+}

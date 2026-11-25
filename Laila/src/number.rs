@@ -53,11 +53,6 @@ pub struct CompiledNumber {
     pub precision: LiteralPrecision,
     pub span: Span,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ResolvedNum {
-    pub representation: NumRepresentation,
-    pub constants: Vec<CompiledNumber>,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NumErrorKind {
@@ -65,7 +60,6 @@ pub enum NumErrorKind {
     InvalidLiteral,
     Overflow,
     UnderflowToZero,
-    IntegerPrecisionLoss,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,8 +75,9 @@ impl fmt::Display for NumError {
             NumErrorKind::ExpectedNumericLiteral => "esperado TK_NUM_INT ou TK_NUM_DEC",
             NumErrorKind::InvalidLiteral => "literal numérico inválido",
             NumErrorKind::Overflow => "literal excede o alcance de double (8 bytes)",
-            NumErrorKind::UnderflowToZero => "literal não nulo seria arredondado para zero até em double",
-            NumErrorKind::IntegerPrecisionLoss => "valor inteiro não é representável exatamente em float ou double; seria necessária precisão arbitrária",
+            NumErrorKind::UnderflowToZero => {
+                "literal não nulo seria arredondado para zero até em double"
+            }
         })
     }
 }
@@ -100,33 +95,6 @@ impl NumCompiler {
     pub fn lower_literal(&self, token: &Token<'_>) -> Result<CompiledNumber, NumError> {
         let literal = NumericLiteral::parse(token)?;
         self.compile(&literal, literal.infer()?)
-    }
-
-    pub fn resolve_binding(
-        &self,
-        tokens: &[Token<'_>],
-        has_nonliteral_values: bool,
-    ) -> Result<ResolvedNum, NumError> {
-        let literals = tokens
-            .iter()
-            .map(NumericLiteral::parse)
-            .collect::<Result<Vec<_>, _>>()?;
-        let mut representation = if has_nonliteral_values || tokens.is_empty() {
-            NumRepresentation::Double
-        } else {
-            literals[0].infer().unwrap_or(NumRepresentation::Int)
-        };
-        for literal in &literals {
-            representation = representation.join(literal.infer()?);
-        }
-        let constants = literals
-            .iter()
-            .map(|literal| self.compile(literal, representation))
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(ResolvedNum {
-            representation,
-            constants,
-        })
     }
 
     fn compile(

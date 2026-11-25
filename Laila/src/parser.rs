@@ -73,8 +73,8 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// 2. AVANÇAR (next): Consome o token atual e avança para o próximo.
-    pub fn next(&mut self) -> Token<'src> {
+    /// 2. AVANÇAR (advance): Consome o token atual e avança para o próximo.
+    pub fn advance(&mut self) -> Token<'src> {
         let current = *self.lookahead();
         if self.cursor < self.tokens.len() && current.kind != TokenKind::Eof {
             self.cursor += 1;
@@ -82,18 +82,18 @@ impl<'src> Parser<'src> {
         current
     }
 
-    /// 3. EXIGIR (match / match_token):
-    /// Se o token atual for o esperado, consome e retorna o token.
-    /// Se não for, sinaliza um erro sintático descritivo.
+    /// 3. EXIGIR (match_token):
+    ///    Se o token atual for o esperado, consome e retorna o token.
+    ///    Se não for, sinaliza um erro sintático descritivo.
     pub fn match_token(&mut self, expected: TokenKind) -> Result<Token<'src>, ParseError> {
         let current = *self.lookahead();
         if current.kind == expected {
-            Ok(self.next())
+            Ok(self.advance())
         } else {
             Err(ParseError {
                 message: format!(
                     "esperado '{}' ({}), mas foi encontrado '{}' ({})",
-                    expected_description(expected),
+                    expected.description(),
                     expected.name(),
                     current.lexeme,
                     current.kind.name()
@@ -103,12 +103,6 @@ impl<'src> Parser<'src> {
                 found: current.kind,
             })
         }
-    }
-
-    /// Alias conveniente para match_token usando a sintaxe raw identifier do Rust.
-    #[inline]
-    pub fn r#match(&mut self, expected: TokenKind) -> Result<Token<'src>, ParseError> {
-        self.match_token(expected)
     }
 
     /// Verifica se o token atual é do tipo esperado (sem consumi-lo).
@@ -140,7 +134,7 @@ impl<'src> Parser<'src> {
                 items.push(ProgramItem::Function(func));
             } else if self.is_command_start() {
                 let stmt = self.parse_statement()?;
-                items.push(ProgramItem::Statement(stmt));
+                items.push(ProgramItem::Statement(Box::new(stmt)));
             } else {
                 let tok = *self.lookahead();
                 return Err(ParseError {
@@ -207,7 +201,7 @@ impl<'src> Parser<'src> {
     /// TIPO_RETORNO → "vazio" | TIPO
     pub fn parse_tipo_retorno(&mut self) -> Result<Type, ParseError> {
         if self.check(TokenKind::TipoVazio) {
-            self.next();
+            self.advance();
             Ok(Type::Vazio)
         } else {
             self.parse_tipo()
@@ -217,12 +211,11 @@ impl<'src> Parser<'src> {
     /// TIPO → "int" | "dec" | "carac" | "num"
     pub fn parse_tipo(&mut self) -> Result<Type, ParseError> {
         let tok = *self.lookahead();
-        if let Some(t) = Type::from_token_kind(tok.kind) {
-            if t != Type::Vazio {
-                self.next();
+        if let Some(t) = Type::from_token_kind(tok.kind)
+            && t != Type::Vazio {
+                self.advance();
                 return Ok(t);
             }
-        }
         Err(ParseError {
             message: format!(
                 "esperado tipo de dado ('int', 'dec', 'carac', 'num'), encontrado '{}' ({})",
@@ -331,7 +324,7 @@ impl<'src> Parser<'src> {
             }
             TokenKind::Se => self.parse_condicional().map(Statement::If),
             TokenKind::Enquanto => self.parse_enquanto().map(Statement::While),
-            TokenKind::Para => self.parse_para().map(Statement::For),
+            TokenKind::Para => self.parse_para().map(|f| Statement::For(Box::new(f))),
             TokenKind::Pare => {
                 let start = self.match_token(TokenKind::Pare)?.span.start;
                 let end = self.match_token(TokenKind::PontoVirg)?.span.end;
@@ -589,7 +582,7 @@ impl<'src> Parser<'src> {
         let mut left = self.parse_expr_e()?;
 
         while self.check(TokenKind::Ou) {
-            let _ = self.next();
+            let _ = self.advance();
             let right = self.parse_expr_e()?;
             let span = Span {
                 start: left.span().start,
@@ -611,7 +604,7 @@ impl<'src> Parser<'src> {
         let mut left = self.parse_expr_relacional()?;
 
         while self.check(TokenKind::E) {
-            let _ = self.next();
+            let _ = self.advance();
             let right = self.parse_expr_relacional()?;
             let span = Span {
                 start: left.span().start,
@@ -631,7 +624,7 @@ impl<'src> Parser<'src> {
     /// EXPR_RELACIONAL → "!" EXPR_RELACIONAL | EXPRESSAO_ARITMETICA (OP_RELACIONAL EXPRESSAO_ARITMETICA)?
     fn parse_expr_relacional(&mut self) -> Result<Expr<'src>, ParseError> {
         if self.check(TokenKind::Nao) {
-            let op_tok = self.next();
+            let op_tok = self.advance();
             let operand = self.parse_expr_relacional()?;
             let span = Span {
                 start: op_tok.span.start,
@@ -657,7 +650,7 @@ impl<'src> Parser<'src> {
         };
 
         if let Some(op) = rel_op {
-            self.next(); // Consome o operador relacional
+            self.advance(); // Consome o operador relacional
             let right = self.parse_expressao_aritmetica()?;
             let span = Span {
                 start: left.span().start,
@@ -679,7 +672,7 @@ impl<'src> Parser<'src> {
         let mut left = self.parse_termo()?;
 
         while self.check(TokenKind::Soma) || self.check(TokenKind::Subtracao) {
-            let op_tok = self.next();
+            let op_tok = self.advance();
             let op = if op_tok.kind == TokenKind::Soma {
                 BinaryOp::Add
             } else {
@@ -709,7 +702,7 @@ impl<'src> Parser<'src> {
             || self.check(TokenKind::Divisao)
             || self.check(TokenKind::Modulo)
         {
-            let op_tok = self.next();
+            let op_tok = self.advance();
             let op = match op_tok.kind {
                 TokenKind::Multiplica => BinaryOp::Mul,
                 TokenKind::Divisao => BinaryOp::Div,
@@ -740,7 +733,7 @@ impl<'src> Parser<'src> {
         let current = *self.lookahead();
 
         if current.kind == TokenKind::Subtracao {
-            self.next();
+            self.advance();
             let operand = self.parse_fator()?;
             let span = Span {
                 start: current.span.start,
@@ -754,13 +747,13 @@ impl<'src> Parser<'src> {
         }
 
         if current.kind == TokenKind::Soma {
-            self.next();
+            self.advance();
             return self.parse_fator();
         }
 
         match current.kind {
             TokenKind::Id => {
-                let id_tok = self.next();
+                let id_tok = self.advance();
                 if self.check(TokenKind::AbrePar) {
                     let call = self.parse_chamada_restante(id_tok)?;
                     Ok(Expr::Call(call))
@@ -772,21 +765,21 @@ impl<'src> Parser<'src> {
                 }
             }
             TokenKind::NumInt => {
-                let tok = self.next();
+                let tok = self.advance();
                 Ok(Expr::IntLiteral {
                     raw: tok.lexeme,
                     span: tok.span,
                 })
             }
             TokenKind::NumDec => {
-                let tok = self.next();
+                let tok = self.advance();
                 Ok(Expr::DecLiteral {
                     raw: tok.lexeme,
                     span: tok.span,
                 })
             }
             TokenKind::Texto => {
-                let tok = self.next();
+                let tok = self.advance();
                 let content = tok.text_content().unwrap_or(tok.lexeme);
                 Ok(Expr::StringLiteral {
                     content,
@@ -794,21 +787,21 @@ impl<'src> Parser<'src> {
                 })
             }
             TokenKind::Verdadeiro => {
-                let tok = self.next();
+                let tok = self.advance();
                 Ok(Expr::BoolLiteral {
                     value: true,
                     span: tok.span,
                 })
             }
             TokenKind::Falso => {
-                let tok = self.next();
+                let tok = self.advance();
                 Ok(Expr::BoolLiteral {
                     value: false,
                     span: tok.span,
                 })
             }
             TokenKind::AbrePar => {
-                let start = self.next().span.start;
+                let start = self.advance().span.start;
                 let inner = self.parse_expressao_ou_logica()?;
                 let end = self.match_token(TokenKind::FechaPar)?.span.end;
                 Ok(Expr::Grouping {
@@ -860,49 +853,10 @@ impl<'src> Parser<'src> {
     }
 }
 
-/// Helper para converter um TokenKind em descrição amigável ao usuário.
-fn expected_description(kind: TokenKind) -> &'static str {
-    match kind {
-        TokenKind::PontoVirg => ";",
-        TokenKind::AbreChaves => "{",
-        TokenKind::FechaChaves => "}",
-        TokenKind::AbrePar => "(",
-        TokenKind::FechaPar => ")",
-        TokenKind::Virgula => ",",
-        TokenKind::Atrib => "=",
-        TokenKind::Id => "identificador",
-        TokenKind::TipoInt => "int",
-        TokenKind::TipoDec => "dec",
-        TokenKind::TipoCarac => "carac",
-        TokenKind::TipoVazio => "vazio",
-        TokenKind::TipoNum => "num",
-        TokenKind::Se => "se",
-        TokenKind::Senao => "senao",
-        TokenKind::Enquanto => "enquanto",
-        TokenKind::Para => "para",
-        TokenKind::Pare => "pare",
-        TokenKind::Continue => "continue",
-        TokenKind::Retorna => "retorna",
-        TokenKind::Imprima => "imprima",
-        TokenKind::Leia => "leia",
-        TokenKind::Eof => "fim de arquivo (EOF)",
-        _ => kind.name(),
-    }
-}
-
 /// Ponto de entrada conveniente para executar a análise sintática a partir de uma fatia de tokens.
 pub fn parse<'src>(tokens: &'src [Token<'src>]) -> Result<Program<'src>, ParseError> {
     let mut parser = Parser::new(tokens);
     parser.parse_program()
-}
-
-/// Ponto de entrada de alto nível: recebe o código-fonte em string, tokeniza e analisa sintaticamente.
-pub fn parse_source(source: &str) -> Result<Program<'_>, String> {
-    let tokens = crate::tokenize(source).map_err(|e| format!("{e}"))?;
-    // Como os tokens pegam referências ao source, precisamos mantê-los no mesmo tempo de vida:
-    // (o vetor é "vazado" para viver tanto quanto `source`; Token<'_> continua presa ao source)
-    let leaked_tokens: &[Token<'_>] = Box::leak(tokens.into_boxed_slice());
-    parse(leaked_tokens).map_err(|e| format!("{e}"))
 }
 
 #[cfg(test)]
@@ -910,98 +864,93 @@ mod tests {
     use super::*;
     use crate::tokenize;
 
-    fn parse_str(src: &str) -> Result<Program<'_>, ParseError> {
+    fn parse_ok(src: &str) -> bool {
         let tokens = tokenize(src).expect("falha ao tokenizar entrada no teste");
-        let leaked: &[Token<'_>] = Box::leak(tokens.into_boxed_slice());
-        parse(leaked)
+        parse(&tokens).is_ok()
     }
 
     #[test]
     fn test_valid_declaracao_simples() {
-        assert!(parse_str("int i;").is_ok());
+        assert!(parse_ok("int i;"));
     }
 
     #[test]
     fn test_valid_declaracao_dec_init() {
-        assert!(parse_str("dec nota_final = 8,50;").is_ok());
+        assert!(parse_ok("dec nota_final = 8,50;"));
     }
 
     #[test]
     fn test_valid_atribuicao_simples() {
-        assert!(parse_str("taxa = 40;").is_ok());
+        assert!(parse_ok("taxa = 40;"));
     }
 
     #[test]
     fn test_valid_condicional_simples() {
-        assert!(parse_str("se (nota_final >= 7,00) { imprima(\"Aprovado\"); }").is_ok());
+        assert!(parse_ok("se (nota_final >= 7,00) { imprima(\"Aprovado\"); }"));
     }
 
     #[test]
     fn test_valid_condicional_composta() {
-        assert!(parse_str("se (x > 0) { taxa = 10; } senao { taxa = 0; }").is_ok());
+        assert!(parse_ok("se (x > 0) { taxa = 10; } senao { taxa = 0; }"));
     }
 
     #[test]
     fn test_valid_laco_enquanto() {
-        assert!(parse_str("enquanto (i < 10) { i = i + 1; }").is_ok());
+        assert!(parse_ok("enquanto (i < 10) { i = i + 1; }"));
     }
 
     #[test]
     fn test_valid_laco_para() {
-        assert!(parse_str("para (i = 0; i < 10; i = i + 1) { imprima(i); }").is_ok());
+        assert!(parse_ok("para (i = 0; i < 10; i = i + 1) { imprima(i); }"));
     }
 
     #[test]
     fn test_valid_comando_saida() {
-        assert!(parse_str("imprima(\"Aprovado\");").is_ok());
+        assert!(parse_ok("imprima(\"Aprovado\");"));
     }
 
     #[test]
     fn test_valid_comando_entrada() {
-        assert!(parse_str("leia(posicao);").is_ok());
+        assert!(parse_ok("leia(posicao);"));
     }
 
     #[test]
     fn test_valid_funcao_principal() {
-        assert!(parse_str("vazio principal() { dec nota_final = 8,50; }").is_ok());
+        assert!(parse_ok("vazio principal() { dec nota_final = 8,50; }"));
     }
 
     #[test]
     fn test_valid_multiplos_parametros() {
-        assert!(parse_str("int soma(int a, dec b, carac c) { retorna a + b; }").is_ok());
+        assert!(parse_ok("int soma(int a, dec b, carac c) { retorna a + b; }"));
     }
 
     #[test]
     fn test_valid_pare_e_continue() {
-        assert!(parse_str("vazio loop() { enquanto (verdadeiro) { pare; continue; } }").is_ok());
+        assert!(parse_ok("vazio loop() { enquanto (verdadeiro) { pare; continue; } }"));
     }
 
     #[test]
     fn test_valid_expressoes_logicas_complexas() {
-        assert!(parse_str("se (x > 0 && taxa == 10 || !ativo) { retorna; }").is_ok());
+        assert!(parse_ok("se (x > 0 && taxa == 10 || !ativo) { retorna; }"));
     }
 
     #[test]
     fn test_invalid_falta_ponto_virgula() {
-        let res = parse_str("int x");
-        assert!(res.is_err());
+        assert!(!parse_ok("int x"));
     }
 
     #[test]
     fn test_invalid_condicional_sem_parenteses() {
-        let res = parse_str("se nota_final >= 7,00 { imprima(\"Aprovado\"); }");
-        assert!(res.is_err());
+        assert!(!parse_ok("se nota_final >= 7,00 { imprima(\"Aprovado\"); }"));
     }
 
     #[test]
     fn test_invalid_ordem_atribuicao() {
-        let res = parse_str("= taxa 40;");
-        assert!(res.is_err());
+        assert!(!parse_ok("= taxa 40;"));
     }
 
     #[test]
     fn test_invalid_bloco_nao_fechado() {
-        let res = parse_str("se (x > 0) { imprima(x);");
-        assert!(res.is_err());
+        assert!(!parse_ok("se (x > 0) { imprima(x);"));
     }
 }
